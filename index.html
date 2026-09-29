@@ -76,7 +76,7 @@ a{color:var(--ac)}[hidden]{display:none!important}
  <div class="card"><h2>Pengingat H-1</h2>
   <p class="mut">Atur nama Anda di tab Jadwal dulu. Pengingat yang paling andal di HP: masukkan jadwal ke aplikasi Kalender dengan alarm otomatis sehari sebelumnya (jam 18:00).</p>
   <button class="btn" id="ics">Unduh jadwal saya (.ics) ke Kalender</button>
-  <p class="mut">Asumsi jam: Pagi 07–14, Siang 14–21, Malam 21–07 (ubah di bagian SH pada kode bila berbeda).</p>
+  <p class="mut">Jam sif: Pagi 05.30–12.30, Siang 11.00–18.00, Malam 16.30–23.30. Alarm berbunyi jam 18.00 sehari sebelumnya.</p>
   <div id="gl"></div>
  </div>
  <div class="card"><h2>Notifikasi saat aplikasi dibuka</h2>
@@ -90,8 +90,8 @@ const $=s=>document.querySelector(s),K='jadwalsif1';
 let db;try{db=JSON.parse(localStorage.getItem(K))}catch(e){}
 db=db||{me:'',m:{},img:'',last:''};
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(db))}catch(e){alert('Penyimpanan penuh/tidak tersedia; data tidak tersimpan.')}};
-// kode: [nama, jam mulai, jam selesai]
-const SH={P:['Pagi',7,14],S:['Siang',14,21],M:['Malam',21,31]};
+// kode: [nama, menit mulai, menit selesai] sejak tengah malam
+const SH={P:['Pagi',330,750],S:['Siang',660,1080],M:['Malam',990,1410]};
 const p2=n=>String(n).padStart(2,'0'),ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rows=mk=>db.m[mk]||(db.m[mk]=[]);
@@ -120,7 +120,7 @@ function banner(){
  const t=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1),mk=ymd(t).slice(0,7);
  const b=$('#ban');if(!db.me.trim()){b.hidden=true;return}
  const c=code(mk,db.me,t.getDate());
- if(SH[c]){const s='Besok ('+t.getDate()+'/'+(t.getMonth()+1)+') Anda dinas sif '+SH[c][0]+' pukul '+p2(SH[c][1])+':00';b.textContent='🔔 '+s;b.hidden=false;
+ if(SH[c]){const s='Besok ('+t.getDate()+'/'+(t.getMonth()+1)+') Anda dinas sif '+SH[c][0]+' pukul '+p2(Math.floor(SH[c][1]/60))+'.'+p2(SH[c][1]%60);b.textContent='🔔 '+s;b.hidden=false;
   if('Notification' in window&&Notification.permission=='granted'&&db.last!=ymd(now)){db.last=ymd(now);save();try{new Notification('Pengingat sif',{body:s})}catch(e){}}}
  else b.hidden=true}
 
@@ -148,13 +148,13 @@ function showImg(){if(db.img){$('#im').src=db.img;$('#pv').hidden=false}}
 $('#fi').onchange=e=>{const f=e.target.files[0];if(!f)return;orig=f;const im=new Image();im.onload=()=>{const k=Math.min(1,2000/im.width),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);db.img=c.toDataURL('image/jpeg',.8);save();showImg()};im.src=URL.createObjectURL(f)};
 
 // ---- Kalender
-const dtf=d=>d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'T'+p2(d.getHours())+'0000';
+const dtf=d=>d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'T'+p2(d.getHours())+p2(d.getMinutes())+'00';
 function events(){const E=[];for(const mk in db.m){const [y,mo]=mk.split('-').map(Number),dim=new Date(y,mo,0).getDate();
  [...((db.m[mk].find(x=>x.n.trim().toLowerCase()==db.me.trim().toLowerCase())||{s:''}).s)].forEach((c,i)=>{c=c.toUpperCase();const h=SH[c];if(!h||i+1>dim)return;
-  E.push({mk,i,h,st:new Date(y,mo-1,i+1,h[1]),en:new Date(y,mo-1,i+1,h[2])})})}return E}
+  E.push({mk,i,h,st:new Date(y,mo-1,i+1,0,h[1]),en:new Date(y,mo-1,i+1,0,h[2])})})}return E}
 function makeIcs(){const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JadwalSif//ID'],st=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
  events().forEach(e=>L.push('BEGIN:VEVENT','UID:'+e.mk+'-'+e.i+'@jadwalsif','DTSTAMP:'+st,'DTSTART:'+dtf(e.st),'DTEND:'+dtf(e.en),'SUMMARY:Sif '+e.h[0],
-  'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Besok sif '+e.h[0],'TRIGGER:-PT'+(e.h[1]+6)+'H','END:VALARM','END:VEVENT'));
+  'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Besok sif '+e.h[0],'TRIGGER:-PT'+(e.h[1]+360)+'M','END:VALARM','END:VEVENT'));
  L.push('END:VCALENDAR');return L.join('\r\n')}
 $('#ics').onclick=()=>{if(!db.me.trim())return alert('Isi nama Anda di tab Jadwal dulu.');
  if(!events().length)return alert('Tidak ada sif untuk nama tersebut. Cek data.');
