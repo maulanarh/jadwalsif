@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Jadwal Sif</title>
+<title>JADWAL HD RSUD DR ISKAK TULUNGAGUNG</title>
 <meta name="theme-color" content="#0f766e">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f7f9;--fg:#1c2430;--card:#fff;--mut:#667085;--ac:#0f766e;--bd:#dde2e8}
@@ -10,7 +10,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 :root[data-theme="dark"]{--bg:#12161c;--fg:#e8ecf1;--card:#1b222b;--mut:#98a2b3;--ac:#2dd4bf;--bd:#2c3644}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 main{max-width:720px;margin:0 auto;padding:14px}
-h1{font-size:20px;margin:4px 0 10px}h2{font-size:16px;margin:0 0 8px}
+h1{font-size:18px;line-height:1.25;margin:4px 0 10px}h2{font-size:16px;margin:0 0 8px}
 .tabs{display:flex;gap:6px;margin-bottom:12px}
 .tabs button{flex:1;padding:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:10px;font:inherit}
 .tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
@@ -34,7 +34,7 @@ input,select,textarea,.btn{width:100%;padding:10px;border:1px solid var(--bd);bo
 .cb.P{background:#fde68a;color:#3b2f00}.cb.S{background:#bae6fd;color:#062a40}.cb.M{background:#c7d2fe;color:#1e1b4b}.cb.O{background:#fecaca;color:#450a0a}.cb\?{outline:2px solid #d97706}
 a{color:var(--ac)}[hidden]{display:none!important}
 </style></head><body><main>
-<h1>📅 Jadwal Sif</h1>
+<h1>📅 JADWAL HD RSUD DR ISKAK TULUNGAGUNG</h1>
 <div class="tabs"><button data-t="j" class="on">Jadwal</button><button data-t="d">Data</button><button data-t="n">Notifikasi</button></div>
 <div id="ban" class="ban" hidden></div>
 
@@ -58,6 +58,10 @@ a{color:var(--ac)}[hidden]{display:none!important}
   <p class="mut">Hasil bacaan bisa salah pada tulisan tangan: cek dan perbaiki di langkah 3. Baris bertanda oranye masih ada kode <b>?</b> (tidak terbaca).</p>
  </div>
  <div class="card"><h2>2. Bulan</h2><input id="mk" type="month"></div>
+ <div class="card"><h2>Impor Excel</h2>
+ <p class="mut">Kolom A = nama, kolom B–AF = tanggal 1–31. Isi tiap sel dengan P/S/M/O atau Pagi/Siang/Malam/Libur. Baris judul boleh ada. Yang dibaca: lembar pertama, dimasukkan ke bulan yang dipilih di atas.</p>
+ <input id="xl" type="file" accept=".xlsx,.xls,.csv">
+ <button class="btn g" id="xt">Unduh templat Excel</button><p id="xs" class="mut"></p></div>
  <div class="card"><h2>3. Nama &amp; kode sif per tanggal</h2>
   <p class="mut">Ketik kode tiap tanggal berurutan mulai tgl 1: <b>P</b>=Pagi, <b>S</b>=Siang, <b>M</b>=Malam, <b>O</b>=Libur, <b>-</b>=kosong, <b>?</b>=belum jelas. Ketuk ▦ pada baris untuk mengedit per tanggal. Contoh: <code>PPPO-SMMO</code></p>
   <label>Tempel banyak nama sekaligus (satu nama per baris)</label>
@@ -70,13 +74,17 @@ a{color:var(--ac)}[hidden]{display:none!important}
   <div id="rows" style="margin-top:12px"></div>
   <button class="btn g" id="addr">+ Baris</button>
  </div>
+<div class="card"><h2>Bagikan ke teman satu ruangan</h2>
+  <p class="mut">Unduh <b>jadwal.json</b> setelah data lengkap, lalu unggah ke repo GitHub (timpa file lama). Semua teman yang membuka halaman akan otomatis mendapat jadwal terbaru.</p>
+  <button class="btn g" id="sj">Unduh jadwal.json (semua bulan)</button></div>
 </section>
 
 <section id="t-n" hidden>
  <div class="card"><h2>Pengingat H-1</h2>
   <p class="mut">Atur nama Anda di tab Jadwal dulu. Pengingat yang paling andal di HP: masukkan jadwal ke aplikasi Kalender dengan alarm otomatis sehari sebelumnya (jam 18:00).</p>
+  <label style="display:flex;gap:8px;align-items:center;margin:8px 0;font-size:14px;color:var(--fg)"><input type="checkbox" id="incs" checked style="width:auto"> Sertakan juga acara sif (jam kerja) di kalender</label>
   <button class="btn" id="ics">Unduh jadwal saya (.ics) ke Kalender</button>
-  <p class="mut">Jam sif: Pagi 05.30–12.30, Siang 11.00–18.00, Malam 16.30–23.30. Alarm berbunyi jam 18.00 sehari sebelumnya.</p>
+  <p class="mut">Jam sif: Pagi 05.30–12.30, Siang 11.00–18.00, Malam 16.30–23.30. Pengingat dibuat sebagai acara kecil pukul 18.30 sehari sebelumnya ("Besok sif …"). Notifikasi bawaan kalender 30 menit sebelumnya membuatnya berbunyi jam 18.00. Hilangkan centang bila Anda hanya ingin pengingatnya.</p>
   <div id="gl"></div>
  </div>
  <div class="card"><h2>Notifikasi saat aplikasi dibuka</h2>
@@ -85,6 +93,7 @@ a{color:var(--ac)}[hidden]{display:none!important}
  </div>
 </section>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const $=s=>document.querySelector(s),K='jadwalsif1';
 let db;try{db=JSON.parse(localStorage.getItem(K))}catch(e){}
@@ -152,13 +161,17 @@ const dtf=d=>d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'T'+p2(d.getHour
 function events(){const E=[];for(const mk in db.m){const [y,mo]=mk.split('-').map(Number),dim=new Date(y,mo,0).getDate();
  [...((db.m[mk].find(x=>x.n.trim().toLowerCase()==db.me.trim().toLowerCase())||{s:''}).s)].forEach((c,i)=>{c=c.toUpperCase();const h=SH[c];if(!h||i+1>dim)return;
   E.push({mk,i,h,st:new Date(y,mo-1,i+1,0,h[1]),en:new Date(y,mo-1,i+1,0,h[2])})})}return E}
-function makeIcs(){const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JadwalSif//ID'],st=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
- events().forEach(e=>L.push('BEGIN:VEVENT','UID:'+e.mk+'-'+e.i+'@jadwalsif','DTSTAMP:'+st,'DTSTART:'+dtf(e.st),'DTEND:'+dtf(e.en),'SUMMARY:Sif '+e.h[0],
-  'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Besok sif '+e.h[0],'TRIGGER:-PT'+(e.h[1]+360)+'M','END:VALARM','END:VEVENT'));
+const hm=m=>p2(Math.floor(m/60))+'.'+p2(m%60);
+function makeIcs(inc){const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JadwalSif//ID'],st=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+ events().forEach(e=>{
+  if(inc)L.push('BEGIN:VEVENT','UID:'+e.mk+'-'+e.i+'@jadwalsif','DTSTAMP:'+st,'DTSTART:'+dtf(e.st),'DTEND:'+dtf(e.en),'SUMMARY:Sif '+e.h[0],'END:VEVENT');
+  const r=new Date(e.st.getFullYear(),e.st.getMonth(),e.st.getDate()-1,18,30),r2=new Date(r.getTime()+30*60000);
+  L.push('BEGIN:VEVENT','UID:'+e.mk+'-'+e.i+'-h1@jadwalsif','DTSTAMP:'+st,'DTSTART:'+dtf(r),'DTEND:'+dtf(r2),'SUMMARY:\uD83D\uDD14 Besok sif '+e.h[0]+' '+hm(e.h[1])+'-'+hm(e.h[2]),
+   'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Besok sif '+e.h[0],'TRIGGER:-PT30M','END:VALARM','END:VEVENT')});
  L.push('END:VCALENDAR');return L.join('\r\n')}
 $('#ics').onclick=()=>{if(!db.me.trim())return alert('Isi nama Anda di tab Jadwal dulu.');
  if(!events().length)return alert('Tidak ada sif untuk nama tersebut. Cek data.');
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([makeIcs()],{type:'text/calendar'}));a.download='jadwal-sif.ics';document.body.appendChild(a);a.click();a.remove()};
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([makeIcs($('#incs').checked)],{type:'text/calendar;charset=utf-8'}));a.download='jadwal-sif.ics';document.body.appendChild(a);a.click();a.remove()};
 function links(){const E=db.me.trim()?events():[];$('#gl').innerHTML=E.length?'<p class="mut">Jika unduhan tidak jalan, tambah manual ke Google Kalender:</p><div class="names">'+E.slice(0,62).map(e=>'<a class="chip" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Sif '+e.h[0])+'&dates='+dtf(e.st)+'/'+dtf(e.en)+'">'+e.st.getDate()+'/'+(e.st.getMonth()+1)+' '+e.h[0]+'</a>').join('')+'</div>':'';nst()}
 function nst(){$('#ns').textContent='Notification' in window?'Status: '+({granted:'aktif',denied:'diblokir',default:'belum diizinkan'}[Notification.permission]):'Browser ini tidak mendukung notifikasi.'}
 $('#np').onclick=()=>{if(!('Notification' in window))return nst();Notification.requestPermission().then(()=>{nst();banner()})};
@@ -216,6 +229,27 @@ $('#mic').onclick=()=>{
  rec.onend=()=>{rec=null;$('#mic').textContent='🎤 Dikte jadwal (suara)';finishVoice()};
  $('#mic').textContent='⏹ Selesai bicara';$('#ms').textContent='Mendengarkan… sebut nama, lalu tanggal dan sif. Contoh: "Novi Ratnasari 1 2 3 pagi 4 libur ..."';
  try{rec.start()}catch(e){rec=null}};
+
+// ---- Impor Excel & data bersama (jadwal.json)
+const cv=v=>{v=String(v==null?'':v).trim().toUpperCase();if(!v)return'-';const m={PAGI:'P',SIANG:'S',SORE:'S',MALAM:'M',LIBUR:'O',OFF:'O'};if(m[v])return m[v];const c=v[0];return c=='L'?'O':'PSMO-'.includes(c)?c:'?'};
+function putRow(R,nm,sv){const f=R.find(r=>r.n.trim().toLowerCase()==nm.toLowerCase());if(f)f.s=sv;else R.push({n:nm,s:sv})}
+$('#xl').onchange=e=>{const f=e.target.files[0];if(!f)return;const xs=$('#xs');
+ if(typeof XLSX=='undefined'){xs.textContent='Pustaka Excel belum termuat (perlu internet). Coba lagi.';return}
+ const fr=new FileReader();fr.onload=()=>{try{const wb=XLSX.read(fr.result,{type:'array'}),A=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''}),R=rows($('#mk').value);let n=0,w=0;
+  A.forEach(r=>{const nm=String(r[0]).trim();if(!nm||/^(nama|name|no\.?)$/i.test(nm))return;
+   const rest=r.slice(1,32),ne=rest.filter(x=>String(x).trim()!=='');
+   if(!ne.length||rest.every(x=>/^\d{1,2}$/.test(String(x).trim())))return;
+   const sv=(ne.length==1&&String(ne[0]).trim().length>=6)?String(ne[0]).toUpperCase().replace(/[^PSMOL\-\?]/g,'').slice(0,31):rest.map(cv).join('').replace(/-+$/,'');
+   putRow(R,nm,sv);n++;if(sv.includes('?'))w++});
+  save();drawRows();xs.textContent=n+' nama diimpor ke bulan '+$('#mk').value+(w?'; '+w+' baris bertanda oranye perlu dicek.':'.')}catch(err){xs.textContent='File tidak bisa dibaca.'}};
+ fr.readAsArrayBuffer(f);e.target.value=''};
+$('#xt').onclick=()=>{if(typeof XLSX=='undefined')return;const H=['Nama',...Array.from({length:31},(_,i)=>i+1)],ws=XLSX.utils.aoa_to_sheet([H,['Contoh Nama','P','P','P','O','P','P','S','S','M','M','O']]),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Jadwal');XLSX.writeFile(wb,'templat-jadwal.xlsx')};
+const hs=t=>{let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return h};
+$('#sj').onclick=()=>{const o={};for(const k in db.m){const r=db.m[k].filter(x=>x.n.trim());if(r.length)o[k]=r}
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'}));a.download='jadwal.json';document.body.appendChild(a);a.click();a.remove()};
+(async()=>{try{const r=await fetch('jadwal.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const o=await r.json();db.sv=db.sv||{};let ch=0;
+ for(const k in o){const h=hs(JSON.stringify(o[k]));if(db.sv[k]!==h){db.m[k]=o[k];db.sv[k]=h;ch++}}
+ if(ch){save();drawRows();render();banner()}}catch(e){}})();
 
 showImg();drawRows();render();banner();
 </script></main></body></html>
