@@ -32,6 +32,7 @@ input,select,textarea,.btn{width:100%;padding:10px;border:1px solid var(--bd);bo
 .cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:4px;margin:0 0 10px}
 .cb{padding:3px 0;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);font:600 14px system-ui;line-height:1.1}.cb small{display:block;font-weight:400;font-size:10px;color:var(--mut)}
 .cb.P{background:#fde68a;color:#3b2f00}.cb.S{background:#bae6fd;color:#062a40}.cb.M{background:#c7d2fe;color:#1e1b4b}.cb.O{background:#fecaca;color:#450a0a}.cb\?{outline:2px solid #d97706}
+.cb.C{background:#fbcfe8;color:#500724}.cl{grid-column:1/-1;font-size:12px;color:var(--mut);margin-top:4px}.cs{font-size:12px;color:var(--mut);margin:-2px 0 6px}.cs:empty{display:none}
 a{color:var(--ac)}[hidden]{display:none!important}
 </style></head><body><main>
 <h1>📅 JADWAL HD RSUD DR ISKAK TULUNGAGUNG</h1>
@@ -59,7 +60,7 @@ a{color:var(--ac)}[hidden]{display:none!important}
  </div>
  <div class="card"><h2>2. Bulan</h2><input id="mk" type="month"></div>
  <div class="card"><h2>Impor Excel</h2>
- <p class="mut">Kolom A = nama, kolom B–AF = tanggal 1–31. Isi tiap sel dengan P/S/M/O atau Pagi/Siang/Malam/Libur. Baris judul boleh ada. Yang dibaca: lembar pertama, dimasukkan ke bulan yang dipilih di atas.</p>
+ <p class="mut">Kolom A = nama, kolom B–AF = tanggal 1–31. Isi tiap sel dengan P/S/M/O atau Pagi/Siang/Malam/Libur. Baris judul boleh ada. Lembar <code>2026-10</code> = jadwal sif. Lembar <code>Cito 2026-10</code> = jadwal cito (isi sel apa saja, misalnya C, pada tanggal cito). Bulan diambil dari nama lembar; jika namanya lain, lembar pertama dibaca sebagai jadwal sif bulan yang dipilih di atas.</p>
  <input id="xl" type="file" accept=".xlsx,.xls,.csv">
  <button class="btn g" id="xt">Unduh templat Excel</button><p id="xs" class="mut"></p></div>
  <div class="card"><h2>3. Nama &amp; kode sif per tanggal</h2>
@@ -73,6 +74,7 @@ a{color:var(--ac)}[hidden]{display:none!important}
   <button class="btn g" id="imb">Impor teks</button><button class="btn g" id="exb">Salin data bulan ini sebagai teks</button><p id="ims" class="mut"></p>
   <div id="rows" style="margin-top:12px"></div>
   <button class="btn g" id="addr">+ Baris</button>
+  <button class="btn g" id="delall">Hapus semua baris bulan ini</button>
  </div>
 <div class="card"><h2>Bagikan ke teman satu ruangan</h2>
   <p class="mut">Unduh <b>jadwal.json</b> setelah data lengkap, lalu unggah ke repo GitHub (timpa file lama). Semua teman yang membuka halaman akan otomatis mendapat jadwal terbaru.</p>
@@ -82,7 +84,7 @@ a{color:var(--ac)}[hidden]{display:none!important}
 <section id="t-n" hidden>
  <div class="card"><h2>Pengingat H-1</h2>
   <p class="mut">Atur nama Anda di tab Jadwal dulu. Pengingat yang paling andal di HP: masukkan jadwal ke aplikasi Kalender dengan alarm otomatis sehari sebelumnya (jam 18:00).</p>
-  <label style="display:flex;gap:8px;align-items:center;margin:8px 0;font-size:14px;color:var(--fg)"><input type="checkbox" id="incs" checked style="width:auto"> Sertakan juga acara sif (jam kerja) di kalender</label>
+  <label style="display:flex;gap:8px;align-items:center;margin:8px 0;font-size:14px;color:var(--fg)"><input type="checkbox" id="incs" checked style="width:auto"> Sertakan juga acara sif dan cito di kalender (cito = acara sehari penuh)</label>
   <button class="btn" id="ics">Unduh jadwal saya (.ics) ke Kalender</button>
   <p class="mut">Jam sif: Pagi 05.30–12.30, Siang 11.00–18.00, Malam 16.30–23.30. Pengingat dibuat sebagai acara kecil pukul 18.30 sehari sebelumnya ("Besok sif …"). Notifikasi bawaan kalender 30 menit sebelumnya membuatnya berbunyi jam 18.00. Hilangkan centang bila Anda hanya ingin pengingatnya.</p>
   <div id="gl"></div>
@@ -105,6 +107,10 @@ const p2=n=>String(n).padStart(2,'0'),ymd=d=>d.getFullYear()+'-'+p2(d.getMonth()
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rows=mk=>db.m[mk]||(db.m[mk]=[]);
 const code=(mk,name,day)=>{const r=(db.m[mk]||[]).find(x=>x.n.trim().toLowerCase()==name.trim().toLowerCase());return r?(r.s[day-1]||'').toUpperCase():''};
+function citoEv(){const E=[];for(const mk in db.m){const [y,mo]=mk.split('-').map(Number),dim=new Date(y,mo,0).getDate(),r=db.m[mk].find(x=>x.n.trim().toLowerCase()==db.me.trim().toLowerCase());if(!r||!r.c)continue;[...r.c].forEach((c,i)=>{if(c=='C'&&i<dim)E.push({mk,i,d:new Date(y,mo-1,i+1)})})}return E}
+const dd=d=>d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate());
+const csum=r=>{const d=[...(r.c||'')].map((x,i)=>x=='C'?i+1:0).filter(Boolean);return d.length?'Cito: tgl '+d.join(', '):''};
+const citoOf=(mk,name,day)=>{const r=(db.m[mk]||[]).find(x=>x.n.trim().toLowerCase()==name.trim().toLowerCase());return !!(r&&(r.c||'')[day-1]=='C')};
 const now=new Date();$('#dt').value=ymd(now);$('#mk').value=ymd(now).slice(0,7);$('#me').value=db.me;
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
@@ -118,9 +124,11 @@ function render(){
  $('#nl').innerHTML=[...new Set(all)].map(n=>'<option value="'+esc(n)+'">').join('');
  const names=(db.m[mk]||[]).filter(r=>r.n&&(r.s[day-1]||'').toUpperCase()==c).map(r=>r.n);
  const me=db.me.trim().toLowerCase();let h='';
- if(me){const mc=code(mk,db.me,day);h+='<p><b>'+esc(db.me)+'</b> pada tanggal ini: <b>'+(SH[mc]?'Sif '+SH[mc][0]:mc=='O'?'Libur':'tidak ada data')+'</b></p>'}
+ if(me){const mc=code(mk,db.me,day);h+='<p><b>'+esc(db.me)+'</b> pada tanggal ini: <b>'+(SH[mc]?'Sif '+SH[mc][0]:mc=='O'?'Libur':'tidak ada data')+(citoOf(mk,db.me,day)?' + CITO':'')+'</b></p>'}
  h+='<h2>Sif '+SH[c][0]+' — '+v.split('-').reverse().join('/')+' ('+names.length+' orang)</h2>';
  h+=names.length?'<div class="names">'+names.map(n=>'<span class="chip'+(n.trim().toLowerCase()==me?' me':'')+'">'+esc(n)+'</span>').join('')+'</div>':'<p class="mut">'+((db.m[mk]||[]).length?'Tidak ada yang jaga / data belum diisi.':'Belum ada data bulan ini. Isi di tab Data.')+'</p>';
+ const cn=(db.m[mk]||[]).filter(r=>r.n&&(r.c||'')[day-1]=='C').map(r=>r.n);
+ h+='<h2 style="margin-top:14px">Cito ('+cn.length+' orang)</h2>'+(cn.length?'<div class="names">'+cn.map(n=>'<span class="chip'+(n.trim().toLowerCase()==me?' me':'')+'">'+esc(n)+'</span>').join('')+'</div>':'<p class="mut">Tidak ada jadwal cito.</p>');
  $('#out').innerHTML=h}
 ['dt','sh'].forEach(i=>$('#'+i).oninput=render);
 $('#me').oninput=e=>{db.me=e.target.value;save();render();banner()};
@@ -128,8 +136,8 @@ $('#me').oninput=e=>{db.me=e.target.value;save();render();banner()};
 function banner(){
  const t=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1),mk=ymd(t).slice(0,7);
  const b=$('#ban');if(!db.me.trim()){b.hidden=true;return}
- const c=code(mk,db.me,t.getDate());
- if(SH[c]){const s='Besok ('+t.getDate()+'/'+(t.getMonth()+1)+') Anda dinas sif '+SH[c][0]+' pukul '+p2(Math.floor(SH[c][1]/60))+'.'+p2(SH[c][1]%60);b.textContent='🔔 '+s;b.hidden=false;
+ const c=code(mk,db.me,t.getDate()),ci=citoOf(mk,db.me,t.getDate());
+ if(SH[c]||ci){const s='Besok ('+t.getDate()+'/'+(t.getMonth()+1)+') Anda dinas '+[SH[c]?'sif '+SH[c][0]+' pukul '+p2(Math.floor(SH[c][1]/60))+'.'+p2(SH[c][1]%60):'',ci?'CITO':''].filter(Boolean).join(' + ');b.textContent='🔔 '+s;b.hidden=false;
   if('Notification' in window&&Notification.permission=='granted'&&db.last!=ymd(now)){db.last=ymd(now);save();try{new Notification('Pengingat sif',{body:s})}catch(e){}}}
  else b.hidden=true}
 
@@ -137,20 +145,22 @@ function banner(){
 const CY=['P','S','M','O','-','?'],dimOf=()=>{const [y,m]=$('#mk').value.split('-').map(Number);return new Date(y,m,0).getDate()};
 function drawRows(){
  const R=rows($('#mk').value);
- $('#rows').innerHTML=R.map((r,i)=>'<div class="rw'+(r.s.includes('?')?' warn':'')+'"><div class="r"><input data-i="'+i+'" data-k="n" value="'+esc(r.n)+'" placeholder="Nama"><input class="s" data-i="'+i+'" data-k="s" maxlength="31" value="'+esc(r.s)+'" placeholder="PPMO-S..."><button data-g="'+i+'" title="Edit per tanggal">▦</button><button data-d="'+i+'">✕</button></div><div class="cells" hidden></div></div>').join('')}
-function drawCells(c,i){const r=rows($('#mk').value)[i];c.innerHTML=Array.from({length:dimOf()},(_,k)=>{const ch=(r.s[k]||'-').toUpperCase();return '<button class="cb '+ch+'" data-i="'+i+'" data-c="'+k+'"><small>'+(k+1)+'</small>'+ch+'</button>'}).join('')}
+ $('#rows').innerHTML=R.map((r,i)=>'<div class="rw'+(r.s.includes('?')?' warn':'')+'"><div class="r"><input data-i="'+i+'" data-k="n" value="'+esc(r.n)+'" placeholder="Nama"><input class="s" data-i="'+i+'" data-k="s" maxlength="31" value="'+esc(r.s)+'" placeholder="PPMO-S..."><button data-g="'+i+'" title="Edit per tanggal">▦</button><button data-d="'+i+'">✕</button></div><div class="cs">'+csum(r)+'</div><div class="cells" hidden></div></div>').join('')}
+function drawCells(c,i){const r=rows($('#mk').value)[i],n=dimOf();c.innerHTML=Array.from({length:n},(_,k)=>{const ch=(r.s[k]||'-').toUpperCase();return '<button class="cb '+ch+'" data-i="'+i+'" data-c="'+k+'"><small>'+(k+1)+'</small>'+ch+'</button>'}).join('')+'<div class="cl">Cito (ketuk untuk pasang/lepas)</div>'+Array.from({length:n},(_,k)=>{const ch=(r.c||'')[k]=='C'?'C':'-';return '<button class="cb '+ch+'" data-i="'+i+'" data-ci="'+k+'"><small>'+(k+1)+'</small>'+ch+'</button>'}).join('')}
+
 $('#rows').oninput=e=>{const t=e.target,R=rows($('#mk').value);if(t.dataset.k=='s'){t.value=t.value.toUpperCase().replace(/[^PSMOL\-\?]/g,'');t.closest('.rw').classList.toggle('warn',t.value.includes('?'))}R[t.dataset.i][t.dataset.k]=t.value;save()};
 $('#rows').onclick=e=>{const t=e.target.closest('button');if(!t)return;const R=rows($('#mk').value);
  if(t.dataset.d!==undefined){R.splice(t.dataset.d,1);save();drawRows();return}
  if(t.dataset.g!==undefined){const c=t.closest('.rw').querySelector('.cells');c.hidden=!c.hidden;if(!c.hidden)drawCells(c,+t.dataset.g);return}
+ if(t.dataset.ci!==undefined){const i=+t.dataset.i,k=+t.dataset.ci,r=R[i],a=((r.c||'')+'-'.repeat(31)).slice(0,31).split('');a[k]=a[k]=='C'?'-':'C';r.c=a.join('').replace(/-+$/,'');if(!r.c)delete r.c;save();const w=t.closest('.rw');drawCells(w.querySelector('.cells'),i);w.querySelector('.cs').textContent=csum(r);return}
  if(t.dataset.c!==undefined){const i=+t.dataset.i,k=+t.dataset.c,r=R[i],a=(r.s+'-'.repeat(31)).slice(0,31).split('');a[k]=CY[(CY.indexOf(a[k])+1)%CY.length];r.s=a.join('').replace(/-+$/,'');save();const w=t.closest('.rw');drawCells(w.querySelector('.cells'),i);w.querySelector('.s').value=r.s;w.classList.toggle('warn',r.s.includes('?'))}};
 $('#addr').onclick=()=>{rows($('#mk').value).push({n:'',s:''});save();drawRows()};
 $('#addb').onclick=()=>{const R=rows($('#mk').value);$('#bulk').value.split('\n').map(x=>x.trim()).filter(Boolean).forEach(n=>R.push({n,s:''}));$('#bulk').value='';save();drawRows()};
 $('#mk').oninput=drawRows;
-$('#exb').onclick=()=>{const mk=$('#mk').value,t='#'+mk+'\n'+rows(mk).filter(r=>r.n).map(r=>r.n+'|'+r.s).join('\n');$('#imp').value=t;$('#imp').select();try{navigator.clipboard.writeText(t)}catch(e){}$('#ims').textContent='Teks siap disalin. Simpan sebagai cadangan atau tempel di perangkat lain.'};
+$('#exb').onclick=()=>{const mk=$('#mk').value,t='#'+mk+'\n'+rows(mk).filter(r=>r.n).map(r=>r.n+'|'+r.s+(r.c?'|'+r.c:'')).join('\n');$('#imp').value=t;$('#imp').select();try{navigator.clipboard.writeText(t)}catch(e){}$('#ims').textContent='Teks siap disalin. Simpan sebagai cadangan atau tempel di perangkat lain.'};
 $('#imb').onclick=()=>{let n=0,w=0;$('#imp').value.split('\n').forEach(l=>{l=l.trim();if(!l)return;const m=l.match(/^#(\d{4}-\d{2})$/);if(m){$('#mk').value=m[1];return}
- const i=l.lastIndexOf('|');if(i<1)return;const nm=l.slice(0,i).trim(),sv=l.slice(i+1).toUpperCase().replace(/[^PSMOL\-\?]/g,'').slice(0,31),R=rows($('#mk').value);
- const f=R.find(r=>r.n.trim().toLowerCase()==nm.toLowerCase());if(f)f.s=sv;else R.push({n:nm,s:sv});n++;if(sv.includes('?'))w++});
+ const p=l.split('|');if(p.length<2||!p[0].trim())return;const nm=p[0].trim(),sv=p[1].toUpperCase().replace(/[^PSMOL\-\?]/g,'').slice(0,31),cs=p.length>2?p[2].toUpperCase().replace(/[^C\-]/g,'').slice(0,31).replace(/-+$/,''):undefined;
+ putRow(rows($('#mk').value),nm,sv,cs);n++;if(sv.includes('?'))w++});
  save();drawRows();$('#imp').value='';$('#ims').textContent=n+' baris diimpor ke bulan '+$('#mk').value+(w?'; '+w+' bertanda oranye perlu dicek.':'.')};
 $('#zm').oninput=e=>$('#im').style.width=e.target.value+'%';
 function showImg(){if(db.img){$('#im').src=db.img;$('#pv').hidden=false}}
@@ -168,9 +178,12 @@ function makeIcs(inc){const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Jadwal
   const r=new Date(e.st.getFullYear(),e.st.getMonth(),e.st.getDate()-1,18,30),r2=new Date(r.getTime()+30*60000);
   L.push('BEGIN:VEVENT','UID:'+e.mk+'-'+e.i+'-h1@jadwalsif','DTSTAMP:'+st,'DTSTART:'+dtf(r),'DTEND:'+dtf(r2),'SUMMARY:\uD83D\uDD14 Besok sif '+e.h[0]+' '+hm(e.h[1])+'-'+hm(e.h[2]),
    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Besok sif '+e.h[0],'TRIGGER:-PT30M','END:VALARM','END:VEVENT')});
+ citoEv().forEach(e=>{const nx=new Date(e.d.getFullYear(),e.d.getMonth(),e.d.getDate()+1),r=new Date(e.d.getFullYear(),e.d.getMonth(),e.d.getDate()-1,18,30),r2=new Date(r.getTime()+30*60000);
+  if(inc)L.push('BEGIN:VEVENT','UID:'+e.mk+'-'+e.i+'-cito@jadwalsif','DTSTAMP:'+st,'DTSTART;VALUE=DATE:'+dd(e.d),'DTEND;VALUE=DATE:'+dd(nx),'SUMMARY:CITO','END:VEVENT');
+  L.push('BEGIN:VEVENT','UID:'+e.mk+'-'+e.i+'-cito-h1@jadwalsif','DTSTAMP:'+st,'DTSTART:'+dtf(r),'DTEND:'+dtf(r2),'SUMMARY:\uD83D\uDD14 Besok CITO','BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Besok CITO','TRIGGER:-PT30M','END:VALARM','END:VEVENT')});
  L.push('END:VCALENDAR');return L.join('\r\n')}
 $('#ics').onclick=()=>{if(!db.me.trim())return alert('Isi nama Anda di tab Jadwal dulu.');
- if(!events().length)return alert('Tidak ada sif untuk nama tersebut. Cek data.');
+ if(!events().length&&!citoEv().length)return alert('Tidak ada sif atau cito untuk nama tersebut. Cek data.');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([makeIcs($('#incs').checked)],{type:'text/calendar;charset=utf-8'}));a.download='jadwal-sif.ics';document.body.appendChild(a);a.click();a.remove()};
 function links(){const E=db.me.trim()?events():[];$('#gl').innerHTML=E.length?'<p class="mut">Jika unduhan tidak jalan, tambah manual ke Google Kalender:</p><div class="names">'+E.slice(0,62).map(e=>'<a class="chip" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Sif '+e.h[0])+'&dates='+dtf(e.st)+'/'+dtf(e.en)+'">'+e.st.getDate()+'/'+(e.st.getMonth()+1)+' '+e.h[0]+'</a>').join('')+'</div>':'';nst()}
 function nst(){$('#ns').textContent='Notification' in window?'Status: '+({granted:'aktif',denied:'diblokir',default:'belum diizinkan'}[Notification.permission]):'Browser ini tidak mendukung notifikasi.'}
@@ -232,18 +245,26 @@ $('#mic').onclick=()=>{
 
 // ---- Impor Excel & data bersama (jadwal.json)
 const cv=v=>{v=String(v==null?'':v).trim().toUpperCase();if(!v)return'-';const m={PAGI:'P',SIANG:'S',SORE:'S',MALAM:'M',LIBUR:'O',OFF:'O'};if(m[v])return m[v];const c=v[0];return c=='L'?'O':'PSMO-'.includes(c)?c:'?'};
-function putRow(R,nm,sv){const f=R.find(r=>r.n.trim().toLowerCase()==nm.toLowerCase());if(f)f.s=sv;else R.push({n:nm,s:sv})}
+function putRow(R,nm,sv,c){let f=R.find(r=>r.n.trim().toLowerCase()==nm.toLowerCase());if(!f){f={n:nm,s:''};R.push(f)}if(sv!==undefined)f.s=sv;if(c!==undefined){if(c)f.c=c;else delete f.c}}
 $('#xl').onchange=e=>{const f=e.target.files[0];if(!f)return;const xs=$('#xs');
  if(typeof XLSX=='undefined'){xs.textContent='Pustaka Excel belum termuat (perlu internet). Coba lagi.';return}
- const fr=new FileReader();fr.onload=()=>{try{const wb=XLSX.read(fr.result,{type:'array'}),A=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''}),R=rows($('#mk').value);let n=0,w=0;
-  A.forEach(r=>{const nm=String(r[0]).trim();if(!nm||/^(nama|name|no\.?)$/i.test(nm))return;
-   const rest=r.slice(1,32),ne=rest.filter(x=>String(x).trim()!=='');
-   if(!ne.length||rest.every(x=>/^\d{1,2}$/.test(String(x).trim())))return;
-   const sv=(ne.length==1&&String(ne[0]).trim().length>=6)?String(ne[0]).toUpperCase().replace(/[^PSMOL\-\?]/g,'').slice(0,31):rest.map(cv).join('').replace(/-+$/,'');
-   putRow(R,nm,sv);n++;if(sv.includes('?'))w++});
-  save();drawRows();xs.textContent=n+' nama diimpor ke bulan '+$('#mk').value+(w?'; '+w+' baris bertanda oranye perlu dicek.':'.')}catch(err){xs.textContent='File tidak bisa dibaca.'}};
+ const fr=new FileReader();fr.onload=()=>{try{const wb=XLSX.read(fr.result,{type:'array'});let n=0,w=0,nc=0,last=null;
+  const jobs=wb.SheetNames.map(sn=>{const m=sn.trim().match(/^(cito[\s_\-]*)?(\d{4}-(?:0[1-9]|1[0-2]))$/i);return m?{sn,mk:m[2],c:!!m[1]}:null}).filter(Boolean);
+  if(!jobs.length)jobs.push({sn:wb.SheetNames[0],mk:$('#mk').value,c:false});
+  jobs.forEach(j=>{const A=XLSX.utils.sheet_to_json(wb.Sheets[j.sn],{header:1,defval:''}),R=rows(j.mk);last=j.mk;
+   A.forEach(r=>{const nm=String(r[0]).trim();if(!nm||/^(nama|name|no\.?)$/i.test(nm))return;
+    const rest=r.slice(1,32),ne=rest.filter(x=>String(x).trim()!=='');
+    if(ne.length&&rest.every(x=>/^\d{1,2}$/.test(String(x).trim())))return;
+    if(j.c){const c=rest.map(x=>/^(|-|0|tidak)$/i.test(String(x).trim())?'-':'C').join('').replace(/-+$/,'');
+     if(!c&&!R.some(x=>x.n.trim().toLowerCase()==nm.toLowerCase()))return;putRow(R,nm,undefined,c);if(c)nc++;return}
+    if(!ne.length)return;
+    const sv=(ne.length==1&&String(ne[0]).trim().length>=6)?String(ne[0]).toUpperCase().replace(/[^PSMOL\-\?]/g,'').slice(0,31):rest.map(cv).join('').replace(/-+$/,'');
+    putRow(R,nm,sv);n++;if(sv.includes('?'))w++})});
+  if(last)$('#mk').value=last;save();drawRows();xs.textContent=n+' nama sif'+(nc?' dan '+nc+' nama cito':'')+' diimpor ke bulan '+last+(w?'; '+w+' baris bertanda oranye perlu dicek.':'.')}catch(err){xs.textContent='File tidak bisa dibaca.'}};
  fr.readAsArrayBuffer(f);e.target.value=''};
-$('#xt').onclick=()=>{if(typeof XLSX=='undefined')return;const H=['Nama',...Array.from({length:31},(_,i)=>i+1)],ws=XLSX.utils.aoa_to_sheet([H,['Contoh Nama','P','P','P','O','P','P','S','S','M','M','O']]),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Jadwal');XLSX.writeFile(wb,'templat-jadwal.xlsx')};
+$('#xt').onclick=()=>{if(typeof XLSX=='undefined')return;const mk=$('#mk').value,H=['Nama',...Array.from({length:31},(_,i)=>i+1)],wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([H,['Contoh Nama','P','P','P','O','P','P','S','S','M','M','O']]),mk);
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([H,['Contoh Nama','','','','','','C']]),'Cito '+mk);XLSX.writeFile(wb,'templat-jadwal.xlsx')};
 const hs=t=>{let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return h};
 $('#sj').onclick=()=>{const o={};for(const k in db.m){const r=db.m[k].filter(x=>x.n.trim());if(r.length)o[k]=r}
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'}));a.download='jadwal.json';document.body.appendChild(a);a.click();a.remove()};
@@ -251,5 +272,7 @@ $('#sj').onclick=()=>{const o={};for(const k in db.m){const r=db.m[k].filter(x=>
  for(const k in o){const h=hs(JSON.stringify(o[k]));if(db.sv[k]!==h){db.m[k]=o[k];db.sv[k]=h;ch++}}
  if(ch){save();drawRows();render();banner()}}catch(e){}})();
 
+let dt=null;$('#delall').onclick=e=>{const b=e.target;if(!dt){b.textContent='Ketuk lagi untuk menghapus semua baris bulan '+$('#mk').value;dt=setTimeout(()=>{dt=null;b.textContent='Hapus semua baris bulan ini'},4000);return}
+ clearTimeout(dt);dt=null;b.textContent='Hapus semua baris bulan ini';db.m[$('#mk').value]=[];save();drawRows()};
 showImg();drawRows();render();banner();
 </script></main></body></html>
